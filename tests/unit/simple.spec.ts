@@ -36,7 +36,8 @@ describe('Simple Todo tests', () => {
 
     expect(typeof proxy.dispatch.fetchTodos === 'function');
 
-    await proxy.dispatch.fetchTodos();
+    const todos = await proxy.dispatch.fetchTodos();
+    expect(Array.isArray(todos));
   });
 
   it('Destructure mutations', async () => {
@@ -45,5 +46,10 @@ describe('Simple Todo tests', () => {
     expect(typeof importTodo === 'function');
     expect(typeof addTodo === 'function');
     expect(typeof toggleTodo === 'function');
+  });
+
+  it('Clear filter', () => {
+    proxy.commit.clearFilter();
+    expect(proxy.state.filter === '');
   });
 });

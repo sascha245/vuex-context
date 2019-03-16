@@ -11,10 +11,15 @@ type InferMutation<T> = T extends undefined | null
   : (payload: T, options?: CommitOptions) => void;
 type InferMutations<T> = { [Key in keyof T]: InferMutation<InferPayload<T[Key]>> };
 
-type InferAction<T> = T extends undefined | null
-  ? (() => void) & ((payload: undefined, options?: DispatchOptions) => void)
-  : (payload: T, options?: DispatchOptions) => void;
-type InferActions<T> = { [Key in keyof T]: InferAction<InferPayload<T[Key]>> };
+type InferAction<T, R> = T extends undefined | null
+  ? (() => R) & ((payload: undefined, options?: DispatchOptions) => R)
+  : (payload: T, options?: DispatchOptions) => R;
+
+type InferActionReturn<T> = T extends (...args: any[]) => any ? ReturnType<T> : void;
+
+type InferActions<T> = {
+  [Key in keyof T]: InferAction<InferPayload<T[Key]>, InferActionReturn<T[Key]>>
+};
 
 type InferGetters<T> = { [Key in keyof T]: T extends any ? ReturnType<T[Key]> : never };
 

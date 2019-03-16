@@ -23,7 +23,7 @@ export default class Home extends Vue {
     this.todoText = '';
   }
 
-  public mounted() {
-    this.todoModule.dispatch.fetchTodos();
+  public async mounted() {
+    console.log('fetched todos', await this.todoModule.dispatch.fetchTodos());
   }
 }

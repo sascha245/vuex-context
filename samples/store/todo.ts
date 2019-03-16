@@ -6,16 +6,21 @@ export interface Todo {
   done: boolean;
 }
 export interface TodoState {
+  filter: string;
   list: Todo[];
 }
 
 export const namespaced = true;
 
 export const state = (): TodoState => ({
+  filter: '',
   list: []
 });
 
 export const mutations = {
+  clearFilter(state: TodoState) {
+    state.filter = '';
+  },
   importTodo(state: TodoState, list: Todo[]) {
     state.list = list;
   },
@@ -47,6 +52,8 @@ export const actions = {
         }
       );
     ctx.commit.importTodo(todos);
+
+    return todos;
   }
 };
 
