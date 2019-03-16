@@ -45,8 +45,8 @@ export const actions = {
 };
 
 export const getters = {
-  doubleCount(state: Counter) {
-    return
+  doubleCount(state: CounterState) {
+    return state.count * 2;
   }
 }
 
