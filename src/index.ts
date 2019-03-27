@@ -1,27 +1,37 @@
 import {
     ActionContext, ActionTree, CommitOptions, DispatchOptions, GetterTree, MutationTree, Store
-} from 'vuex';
+} from "vuex";
+
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((
+  k: infer I
+) => void)
+  ? I
+  : never;
 
 type InferPayload<T> = T extends (_: any, payload?: any, options?: any) => any
   ? Parameters<T>[1]
   : never;
 
-type InferMutation<T> = T extends undefined | null
+type Mutation<T> = T extends undefined
   ? (() => void) & ((payload: undefined, options?: CommitOptions) => void)
   : (payload: T, options?: CommitOptions) => void;
-type InferMutations<T> = { [Key in keyof T]: InferMutation<InferPayload<T[Key]>> };
 
-type InferAction<T, R> = T extends undefined | null
+type InferMutation<T> = UnionToIntersection<Mutation<InferPayload<T>>>;
+type InferMutations<T> = { [Key in keyof T]: InferMutation<T[Key]> };
+
+type Action<T, R> = T extends undefined
   ? (() => R) & ((payload: undefined, options?: DispatchOptions) => R)
   : (payload: T, options?: DispatchOptions) => R;
+type ActionReturn<T> = T extends (...args: any[]) => infer R ? R : void;
 
-type InferActionReturn<T> = T extends (...args: any[]) => any ? ReturnType<T> : void;
+type InferAction<T> = UnionToIntersection<Action<InferPayload<T>, ActionReturn<T>>>;
+type InferActions<T> = { [Key in keyof T]: InferAction<T[Key]> };
 
-type InferActions<T> = {
-  [Key in keyof T]: InferAction<InferPayload<T[Key]>, InferActionReturn<T[Key]>>
+type InferGetters<T> = {
+  [Key in keyof T]: T[Key] extends (state: any, getters: any) => infer R ? R : never
 };
 
-type InferGetters<T> = { [Key in keyof T]: T extends any ? ReturnType<T[Key]> : never };
+type InferState<S> = S extends () => infer S ? S : S;
 
 export function Context<
   S extends (() => object) | object = {},
@@ -29,19 +39,21 @@ export function Context<
   A extends ActionTree<any, any> = {},
   G extends GetterTree<any, any> = {}
 >() {
-  type State = S extends () => object ? ReturnType<S> : S;
-
-  const InstanceType = (null as unknown) as Readonly<{
-    state: State;
+  type InstanceType = Readonly<{
+    state: InferState<S>;
     commit: InferMutations<M>;
     dispatch: InferActions<A>;
     getters: InferGetters<G>;
   }>;
 
   return {
-    InstanceType,
+    InstanceType: (undefined as unknown) as InstanceType,
 
-    getInstance(store: Store<any> | ActionContext<any, any>, ns: string = ''): typeof InstanceType {
+    getGetters(getters: any): InstanceType['getters'] {
+      return getters;
+    },
+
+    getInstance(store: Store<any> | ActionContext<any, any>, ns: string = ''): InstanceType {
       const splitNs = ns ? ns.split('/').filter(val => !!val) : [];
       const fixedNs = splitNs.length ? splitNs.join('/') + '/' : '';
 

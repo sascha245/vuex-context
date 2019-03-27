@@ -1,55 +1,64 @@
-import Vue from 'vue';
-import Vuex from 'vuex';
+import Vue from "vue";
+import Vuex from "vuex";
 
-import { createStore } from '../../samples/store/';
-import { Todo } from '../../samples/store/todo';
+import { createStore } from "../../samples/store/";
+import { Counter } from "../../samples/store/counter";
+import { Todo } from "../../samples/store/todo";
 
 Vue.use(Vuex);
 
 describe('Simple Todo tests', () => {
   let store;
-  let proxy: typeof Todo.InstanceType;
+  let todo: typeof Todo.InstanceType;
+  let counter: typeof Counter.InstanceType;
 
   beforeEach(() => {
     store = createStore();
-    proxy = Todo.getInstance(store, 'todo');
+    todo = Todo.getInstance(store, 'todo');
+    counter = Counter.getInstance(store, 'counter');
   });
 
   it('Add todo', () => {
-    expect(Array.isArray(proxy.state.list));
-    expect(proxy.state.list.length === 0);
+    expect(Array.isArray(todo.state.list));
+    expect(todo.state.list.length === 0);
 
-    expect(typeof proxy.commit.addTodo === 'function');
+    expect(typeof todo.commit.addTodo === 'function');
 
-    proxy.commit.addTodo({
+    todo.commit.addTodo({
       done: false,
       id: 'random',
       text: 'Random todo'
     });
 
-    expect(proxy.state.list.length === 1);
+    expect(todo.state.list.length === 1);
   });
 
   it('Fetch todos', async () => {
-    expect(Array.isArray(proxy.state.list));
-    expect(proxy.state.list.length === 0);
+    expect(Array.isArray(todo.state.list));
+    expect(todo.state.list.length === 0);
 
-    expect(typeof proxy.dispatch.fetchTodos === 'function');
+    expect(typeof todo.dispatch.fetchTodos === 'function');
 
-    const todos = await proxy.dispatch.fetchTodos();
+    const todos = await todo.dispatch.fetchTodos();
     expect(Array.isArray(todos));
   });
 
   it('Destructure mutations', async () => {
-    const { importTodo, addTodo, toggleTodo } = proxy.commit;
+    const { importTodo, addTodo, toggleTodo } = todo.commit;
 
     expect(typeof importTodo === 'function');
     expect(typeof addTodo === 'function');
     expect(typeof toggleTodo === 'function');
   });
 
+  it('Optional payload', async () => {
+    counter.commit.increment();
+    counter.commit.increment(12);
+    expect(true);
+  });
+
   it('Clear filter', () => {
-    proxy.commit.clearFilter();
-    expect(proxy.state.filter === '');
+    todo.commit.clearFilter();
+    expect(todo.state.filter === '');
   });
 });

@@ -1,18 +1,17 @@
-import { Context } from '../../src';
+import { Context } from "../../src";
 
-export interface CounterState {
-  count: number;
-}
+export type CounterState = ReturnType<typeof state>;
 
 export const namespaced = true;
 
-export const state = (): CounterState => ({
-  count: 0
+export const state = () => ({
+  count: 0,
+  test: 0
 });
 
 export const mutations = {
-  increment(state: CounterState) {
-    state.count++;
+  increment(state: CounterState, payload: number = 1) {
+    state.count += payload;
   },
   incrementBy(state: CounterState, payload: number) {
     state.count += payload;
@@ -20,15 +19,21 @@ export const mutations = {
 };
 
 export const actions = {
-  async incrementAsync(context) {
+  async incrementAsync(context): Promise<number> {
     const ctx = Counter.getInstance(context);
     ctx.commit.increment();
+    ctx.commit.incrementBy(12);
+    return ctx.state.count;
   }
 };
 
 export const getters = {
-  doubleCount(state: CounterState) {
+  doubleCount(state: CounterState): number {
     return state.count * 2;
+  },
+  quadrupleCount(state: CounterState, context): number {
+    const getters = Counter.getGetters(context);
+    return getters.doubleCount * 2;
   }
 };
 

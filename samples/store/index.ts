@@ -1,13 +1,15 @@
-import Vue from 'vue';
-import Vuex, { Store, StoreOptions } from 'vuex';
+import Vue from "vue";
+import Vuex, { Store, StoreOptions } from "vuex";
 
-import * as todo from './todo';
+import * as counter from "./counter";
+import * as todo from "./todo";
 
 Vue.use(Vuex);
 
 const options: StoreOptions<any> = {
   modules: {
-    todo
+    todo,
+    counter
   }
 };
 

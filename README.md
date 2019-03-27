@@ -80,6 +80,33 @@ export const actions = {
 
 ```
 
+## Circular referencing
+
+**Warning**: Be careful when returning values from your **actions** and **getters**!
+```ts
+export const actions = {
+  async incrementAsync(context) {
+    const counterModule = Counter.getInstance(context);
+    counterModule.commit.increment();
+    // Circular referencing here, as incrementAsync needs the type from counterModule and counterModule needs the type from incrementAsync
+    // Result: counterModule is cast to any
+    return counterModule.state.count;
+  }
+};
+```
+To avoid this, always manually type your return types:
+```ts
+export const actions = {
+  // specify the return type here
+  async incrementAsync(context): number {
+    const counterModule = Counter.getInstance(context);
+    counterModule.commit.increment();
+    // everything is fine with our counterModule now
+    return counterModule.state.count;
+  }
+};
+```
+
 ## Contributors
 
 If you are interested and want to help out, don't hesitate to contact me or to create a pull request with your fixes / features.
