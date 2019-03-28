@@ -33,6 +33,29 @@ type InferGetters<T> = {
 
 type InferState<S> = S extends () => infer S ? S : S;
 
+function getContext(store: any, ns: string): ActionContext<any, any> {
+  if (store._modules !== undefined) {
+    const module = store._modulesNamespaceMap[ns] || store._modules.root;
+    return module.context;
+  }
+  return store;
+}
+function getterDescriptor(fn: () => any): PropertyDescriptor {
+  return {
+    configurable: false,
+    enumerable: false,
+    get: fn
+  };
+}
+function valueDescriptor(value: any): PropertyDescriptor {
+  return {
+    configurable: false,
+    enumerable: false,
+    writable: false,
+    value
+  };
+}
+
 export function Context<
   S extends (() => object) | object = {},
   M extends MutationTree<any> = {},
@@ -54,39 +77,30 @@ export function Context<
     },
 
     getInstance(store: Store<any> | ActionContext<any, any>, ns: string = ''): InstanceType {
-      const splitNs = ns ? ns.split('/').filter(val => !!val) : [];
-      const fixedNs = splitNs.length ? splitNs.join('/') + '/' : '';
+      const fixedNs = ns.length ? ns + '/' : '';
+      const context = getContext(store, fixedNs);
 
-      const state = new Proxy(Object.create(null), {
-        get(target, propertyName: string) {
-          return splitNs.reduce((pState, key) => pState[key], store.state)[propertyName];
-        }
-      });
 
       const commit = new Proxy(Object.create(null), {
         get(target, type: string) {
-          return (payload?: any, options?: any) => store.commit(fixedNs + type, payload, options);
+          return (payload?: any, options?: any) => context.commit(type, payload, options);
         }
       });
 
       const dispatch = new Proxy(Object.create(null), {
         get(target, type: string) {
-          return (payload?: any, options?: any) => store.dispatch(fixedNs + type, payload, options);
+          return (payload?: any, options?: any) => context.dispatch(type, payload, options);
         }
       });
 
-      const getters = new Proxy(Object.create(null), {
-        get(target, key: string) {
-          return store.getters[fixedNs + key];
-        }
+      const instance = Object.create(null, {
+        state: getterDescriptor(() => context.state),
+        getters: getterDescriptor(() => context.getters),
+        commit: valueDescriptor(commit),
+        dispatch: valueDescriptor(dispatch)
       });
 
-      return Object.freeze({
-        state,
-        commit,
-        dispatch,
-        getters
-      });
+      return instance;
     }
   };
 }
