@@ -1,7 +1,7 @@
 # vuex-context
 
 Write fully type inferred Vuex modules:
-- Extremely lightweight: Under 100 lines of code
+- Extremely lightweight
 - No boilerplate
 - No class
 - Handles module refactoring
@@ -45,8 +45,11 @@ export const actions = {
 };
 
 export const getters = {
-  doubleCount(state: CounterState) {
+  doubleCount(state: CounterState): number {
     return state.count * 2;
+  },
+  quadrupleCount(state: CounterState, context): number {
+    // ...
   }
 }
 
@@ -78,30 +81,45 @@ export const actions = {
   }
 };
 
+// You can also type your getters
+export const getters = {
+  doubleCount(state: CounterState): number {
+    return state.count * 2;
+  },
+  quadrupleCount(state: CounterState, context): number {
+    const getters = Counter.getGetters(context);
+    return getters.doubleCount * 2;
+  }
+}
+
 ```
 
-## Circular referencing
+
+## Circular references
 
 **Warning**: Be careful when returning values from your **actions** and **getters**!
+
 ```ts
 export const actions = {
   async incrementAsync(context) {
     const counterModule = Counter.getInstance(context);
     counterModule.commit.increment();
-    // Circular referencing here, as incrementAsync needs the type from counterModule and counterModule needs the type from incrementAsync
+    // Circular reference here, as incrementAsync needs the type from counterModule and counterModule needs the type from incrementAsync
     // Result: counterModule is cast to any
     return counterModule.state.count;
   }
 };
 ```
-To avoid this, always manually type your return types:
+
+To avoid this, you should manually write the return types of your actions and getters:
+
 ```ts
 export const actions = {
-  // specify the return type here
-  async incrementAsync(context): number {
+  // Specify the return type here
+  async incrementAsync(context): Promise<number> {
     const counterModule = Counter.getInstance(context);
     counterModule.commit.increment();
-    // everything is fine with our counterModule now
+    // Everything works fine now
     return counterModule.state.count;
   }
 };
