@@ -7,7 +7,7 @@
     <div v-for="todo in todos" :key="todo.id">
       <label>
         {{ todo.text }}
-        <input type="checkbox" :value="todo.done" @change="toggleTodo(todo)">
+        <input type="checkbox" :checked="todo.done" @change="toggleTodo(todo)">
       </label>
     </div>
 
