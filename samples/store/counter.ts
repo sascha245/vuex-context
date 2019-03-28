@@ -10,6 +10,9 @@ export const state = () => ({
 });
 
 export const mutations = {
+  setCount(state: CounterState, payload: number) {
+    state.count = payload;
+  },
   increment(state: CounterState, payload: number = 1) {
     state.count += payload;
   },

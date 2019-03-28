@@ -61,4 +61,36 @@ describe('Simple Todo tests', () => {
     todo.commit.clearFilter();
     expect(todo.state.filter === '');
   });
+
+  it('Handle replaceState', () => {
+    counter.commit.setCount(5);
+
+    expect(counter.state.count === 5);
+
+    const json = JSON.parse(JSON.stringify(store.state));
+    json.counter.count = 6;
+
+    store.replaceState(json);
+
+    expect(counter.state.count === 6);
+  });
+
+  it('Multiple stores', () => {
+    counter.commit.setCount(10);
+
+    expect(counter.state.count === 10);
+
+    const instance = Counter.getInstance(store, 'counter');
+
+    expect(instance.state.count === 10);
+
+    const store2 = createStore();
+
+    const counter2 = Counter.getInstance(store2, 'counter');
+
+    counter2.commit.setCount(20);
+
+    expect(counter.state.count === 10);
+    expect(counter2.state.count === 20);
+  });
 });
