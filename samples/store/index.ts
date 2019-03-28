@@ -7,6 +7,7 @@ import * as todo from "./todo";
 Vue.use(Vuex);
 
 const options: StoreOptions<any> = {
+  strict: true,
   modules: {
     todo,
     counter
