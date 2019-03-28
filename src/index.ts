@@ -69,6 +69,8 @@ export function Context<
     getters: InferGetters<G>;
   }>;
 
+  const cache = new WeakMap<object, InstanceType>();
+
   return {
     InstanceType: (undefined as unknown) as InstanceType,
 
@@ -80,16 +82,28 @@ export function Context<
       const fixedNs = ns.length ? ns + '/' : '';
       const context = getContext(store, fixedNs);
 
+      const cachedInstance = cache.get(context.dispatch);
+      if (cachedInstance) {
+        return cachedInstance;
+      }
 
       const commit = new Proxy(Object.create(null), {
         get(target, type: string) {
-          return (payload?: any, options?: any) => context.commit(type, payload, options);
+          return (
+            target[type] ||
+            (target[type] = (payload?: any, options?: any) =>
+              context.commit(type, payload, options))
+          );
         }
       });
 
       const dispatch = new Proxy(Object.create(null), {
         get(target, type: string) {
-          return (payload?: any, options?: any) => context.dispatch(type, payload, options);
+          return (
+            target[type] ||
+            (target[type] = (payload?: any, options?: any) =>
+              context.dispatch(type, payload, options))
+          );
         }
       });
 
@@ -99,6 +113,8 @@ export function Context<
         commit: valueDescriptor(commit),
         dispatch: valueDescriptor(dispatch)
       });
+
+      cache.set(context.dispatch, instance);
 
       return instance;
     }
